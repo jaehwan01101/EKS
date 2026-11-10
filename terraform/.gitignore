@@ -1,0 +1,11 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+*.err
+crash.log
+
+# 실제 값이 들어간 파일은 커밋하지 않는다 (*.example 만 커밋)
+common.tfvars
+backend.hcl

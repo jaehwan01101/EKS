@@ -1,0 +1,8 @@
+# 00-bootstrap 을 제외한 모든 레이어의 S3 backend 공통 설정. backend.hcl 로 복사해서 채운다.
+#   terraform init -backend-config=../backend.hcl
+# 레이어별 state 경로(key)는 각 레이어의 backend.tf 에 있다.
+
+bucket       = "reservation-tfstate-123456789012"
+region       = "ap-northeast-2"
+encrypt      = true
+use_lockfile = true # S3 네이티브 락 (DynamoDB 불필요)
