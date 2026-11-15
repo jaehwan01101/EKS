@@ -20,7 +20,9 @@ module "vpc" {
   database_subnets = [for i in range(length(var.azs)) : cidrsubnet(var.vpc_cidr, 7, 36 + i)] # 10.73.4.128/27, 10.73.4.160/27
 
   # NAT Gateway 1개 (첫 번째 AZ). 그 AZ 장애 시 프라이빗 서브넷의 외부 통신이 끊기는 SPOF 를 감수한다.
-  enable_nat_gateway = true
+  # 변수로 켜고 끈다. 클러스터가 없는 동안 NAT 만 지우면 하루 약 1.5~2달러(실측: 크레딧 4일간 7.18달러 감소)가 멈추고,
+  # VPC ID 는 그대로라서 Git 에 적어 둔 vpcId(LB 컨트롤러 값)를 매번 바꾸지 않아도 된다.
+  enable_nat_gateway = var.enable_nat_gateway
   single_nat_gateway = true
 
   enable_dns_hostnames = true

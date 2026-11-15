@@ -1,0 +1,25 @@
+# metrics-server: kubectl top 과 HPA 가 쓰는 CPU/메모리 지표. 지금 클러스터에는 없다.
+# 노드 메모리 여유를 실측(kubectl top nodes)하는 데에도 필요하다.
+# 차트 3.14.0. 기본값 그대로 쓰므로 값 파일은 없다.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metrics-server
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes-sigs.github.io/metrics-server/
+    chart: metrics-server
+    targetRevision: "3.14.0"
+    helm:
+      releaseName: metrics-server
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

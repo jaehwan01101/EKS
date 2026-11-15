@@ -1,0 +1,20 @@
+# 차트 aws-load-balancer-controller 3.6.2 의 값.
+clusterName: reservation
+region: ap-northeast-2
+
+# 노드의 메타데이터 서비스(IMDS)는 홉 제한 때문에 파드에서 못 부르는 경우가 많다.
+# 그러면 컨트롤러가 VPC ID 를 스스로 알아내지 못해 기동에 실패하므로 지정한다.
+# 20-network 를 destroy 후 다시 만들면 값이 바뀌니, VPC 는 유지하고 NAT 만 끄는 방식으로 운영한다.
+vpcId: vpc-0e247ec0cdbb9ccd6
+
+# 차트 기본값은 2개(고가용성). 노드 메모리가 빠듯해서 1개로 줄인다 (HA 포기, 한계로 기록).
+replicaCount: 1
+
+# 차트 기본값은 instance(노드포트 경유). ALB 가 파드 IP 로 직접 보내는 ip 모드여야
+# 카나리 가중치 라우팅과 파드 단위 헬스체크가 된다. VPC CNI 파드는 VPC IP 를 가져서 ip 모드가 가능하다.
+defaultTargetType: ip
+
+# Terraform 50-platform 의 Pod Identity 연결(kube-system/aws-load-balancer-controller)과 이름이 같아야 한다.
+serviceAccount:
+  create: true
+  name: aws-load-balancer-controller

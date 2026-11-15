@@ -1,0 +1,8 @@
+# 차트 argo-rollouts 2.43.8 의 값.
+controller:
+  # 차트 기본값은 2개. 노드 메모리가 빠듯해서 1개로 줄인다 (HA 포기, 한계로 기록).
+  replicas: 1
+
+dashboard:
+  # 카나리 진행 상황(단계, 가중치, 분석 결과)을 보는 UI. 접속은 port-forward 로만 한다.
+  enabled: true

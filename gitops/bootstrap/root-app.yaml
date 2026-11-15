@@ -1,0 +1,21 @@
+# 루트 Application ("app of apps"). 이것만 사람이 kubectl 로 적용한다.
+# gitops/platform/ 아래의 Application 들을 읽어서 각각을 클러스터에 등록한다.
+# 이후 플랫폼 구성요소의 추가/변경/삭제는 Git 에 파일을 추가/수정/삭제하는 것으로 끝난다.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jaehwan01101/EKS.git
+    targetRevision: main
+    path: gitops/platform
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true # Git 에서 파일을 지우면 클러스터에서도 지운다
+      selfHeal: true # 수동 변경은 Git 상태로 되돌린다. 긴급 수정은 README 의 절차를 따른다.

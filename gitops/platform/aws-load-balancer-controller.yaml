@@ -1,0 +1,31 @@
+# AWS Load Balancer Controller: Ingress 를 보고 ALB 를 만든다.
+# AWS 권한은 Terraform 50-platform 이 Pod Identity 로 연결해 둔다 (서비스 어카운트 이름이 같아야 한다).
+# 차트 3.6.2 = 앱 v3.6.2. 50-platform 의 IAM 정책 JSON(v3.6.2)과 같은 버전이다. 올릴 때는 둘을 같이 올린다.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aws-load-balancer-controller
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  sources:
+    - repoURL: https://aws.github.io/eks-charts
+      chart: aws-load-balancer-controller
+      targetRevision: "3.6.2"
+      helm:
+        releaseName: aws-load-balancer-controller
+        valueFiles:
+          - $values/gitops/values/aws-load-balancer-controller.yaml
+    # 값 파일은 우리 Git 에서 가져온다 (ref: values 가 위의 $values 가 된다)
+    - repoURL: https://github.com/jaehwan01101/EKS.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

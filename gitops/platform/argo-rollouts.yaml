@@ -1,0 +1,31 @@
+# Argo Rollouts: 카나리 배포 진행과 분석 기반 자동 롤백.
+# 차트 2.43.8 (앱 v1.10.1).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-rollouts
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  sources:
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argo-rollouts
+      targetRevision: "2.43.8"
+      helm:
+        releaseName: argo-rollouts
+        valueFiles:
+          - $values/gitops/values/argo-rollouts.yaml
+    - repoURL: https://github.com/jaehwan01101/EKS.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo-rollouts
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

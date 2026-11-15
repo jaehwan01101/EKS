@@ -1,0 +1,17 @@
+# Argo CD 설치 값. 차트 argo-cd 10.11.6 (앱 v3.5.6).
+# 설치는 점프 호스트에서 helm 으로 한 번만 한다 (README.md 참고). 이후 플랫폼 구성요소는 Argo CD 가 Git 에서 설치한다.
+#
+# 노드 2대(각 8GB)에 관측성 스택까지 올려야 해서 쓰지 않는 구성요소를 끈다.
+dex:
+  # SSO(외부 로그인) 연동용. UI 를 인터넷에 노출하지 않고 SSO 도 쓰지 않으므로 끈다.
+  enabled: false
+
+notifications:
+  # 슬랙 등으로 배포 알림을 보내는 컨트롤러. 알림은 Alertmanager 로 일원화할 예정이라 끈다.
+  enabled: false
+
+# 그 밖의 값은 차트 기본값을 쓴다. 참고:
+#   - Git 폴링 주기: configs.params 의 timeout.reconciliation = 120s (+ 최대 60s 흔들림)
+#     클러스터 API 가 프라이빗이라 GitHub 웹훅이 들어올 수 없어서 폴링에 의존한다.
+#   - 모든 컴포넌트 replicas 1 (고가용성 포기, 비용/메모리 절약)
+#   - UI(argocd-server)는 ClusterIP. 접속은 kubectl port-forward 를 SSM 터널로 감싼다.

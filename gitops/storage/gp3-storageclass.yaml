@@ -1,0 +1,15 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  encrypted: "true"
+# 파드가 스케줄된 뒤에 볼륨을 만든다. 그래야 볼륨이 파드와 같은 AZ 에 생긴다.
+# (EBS 볼륨은 AZ 에 묶여서, 즉시 만들면 다른 AZ 에 생겨 파드가 못 붙이는 경우가 생긴다)
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+reclaimPolicy: Delete

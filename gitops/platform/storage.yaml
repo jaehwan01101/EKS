@@ -1,0 +1,20 @@
+# gp3 StorageClass. Prometheus, Loki 의 PVC 가 쓴다 (EBS CSI 드라이버는 Terraform 50-platform 이 설치).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: storage
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jaehwan01101/EKS.git
+    targetRevision: main
+    path: gitops/storage
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

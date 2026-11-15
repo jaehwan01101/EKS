@@ -17,6 +17,12 @@ variable "vpc_cidr" {
   }
 }
 
+variable "enable_nat_gateway" {
+  description = "false 로 적용하면 NAT Gateway 와 그 EIP 만 지워진다(VPC, 서브넷은 유지). 클러스터를 내려둔 동안 시간당 과금을 끊는 용도. 다시 켜면 프라이빗 서브넷의 외부 경로가 복구된다."
+  type        = bool
+  default     = true
+}
+
 variable "azs" {
   description = "사용할 AZ 2개. 쓸 인스턴스 타입이 두 AZ 모두에서 제공되는지 aws ec2 describe-instance-type-offerings 로 확인할 것."
   type        = list(string)
