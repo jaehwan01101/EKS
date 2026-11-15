@@ -44,8 +44,14 @@
 - **증상**: ESO 설치 Application 이 5번 재시도 후 실패. ESO 컨트롤러 파드는 `RESTARTS 7`, cert-controller 는 `0/1`. 다음 wave(ClusterSecretStore)는 `Missing` 에서 대기.
 - **어떻게 찾았나**: Application 의 `operationState.message` 를 조회 → `CustomResourceDefinition "clustersecretstores.external-secrets.io" is invalid: metadata.annotations: Too long: may not be more than 262144 bytes`. (이 문제는 ESO/Prometheus Operator 에서 널리 알려져 있어 후보로 미리 예상했고, 메시지로 확정)
 - **원인**: Argo CD 의 기본 방식인 client-side apply 는 리소스 전체를 `last-applied-configuration` 어노테이션에 저장한다. ESO 의 CRD 는 스키마가 커서 이 어노테이션이 한도를 넘는다. CRD 가 없으니 컨트롤러가 기동 실패를 반복했다. **뿌리 하나가 세 가지 증상으로 보였다.**
+- **컨트롤러 재시작의 원인 (로그로 확인)**: 처음에는 "CRD 부재 때문일 것"이라는 추론이었고, 죽기 직전 로그(`kubectl logs --previous`)로 확정했다.
+  - `no matches for kind "ClusterSecretStore" in version "external-secrets.io/v1"` / `if kind is a CRD, it should be installed before calling Start`
+    → 컨트롤러가 API 서버에 "ClusterSecretStore 가 뭔가요?"라고 물었는데 CRD 가 없어 답을 못 받음
+  - `Could not wait for Cache to sync ... timed out` → 그 종류의 캐시 동기화를 기다리다 시간 초과
+  - `problem running manager` 후 종료. `describe pod` 의 Last State: `Terminated / Error / Exit Code 1`, 실행 시간 정확히 2분(12:37:31 → 12:39:31) = 캐시 동기화 대기 시간
+  - 즉 **CRD 없음 → 캐시 동기화 시간 초과 → 컨트롤러 종료(exit 1) → 쿠버네티스가 재시작** 이 반복되었다. (확인 시점 Restart Count 8)
 - **해결**: 해당 Application 에 `ServerSideApply=true`. API 서버가 변경을 추적하므로 어노테이션 한도가 없다.
-- **상태**: 수정 반영 후 `Healthy` 확인 대기 (확인되면 이 줄을 갱신).
+- **상태**: 해결됨 (수정 push 후 Application 이 정상으로 바뀐 것을 확인). 단, ClusterSecretStore 가 Ready 인지(= SSM 인증까지 통하는지)와 실제 Secret 동기화는 앱 배포 단계에서 별도로 검증한다.
 - **배운 것**: 증상(Degraded)이 아니라 메시지(`operationState`)를 읽는다. 재시작 횟수 같은 2차 증상은 뿌리를 가리지 않게 주의.
 
 ---

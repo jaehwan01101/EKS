@@ -1,0 +1,29 @@
+# 예약 서비스 앱. 매니페스트는 앱 저장소의 deploy/ 에 있고, CI 가 이미지 태그를 그 폴더에 커밋한다.
+# wave 2: ESO 와 ClusterSecretStore(wave 0, 1)가 준비된 뒤에 배포한다 (앱이 ExternalSecret 을 쓴다).
+#
+# 의도적으로 ignoreDifferences 를 넣지 않았다.
+#   Rollouts 는 Service 셀렉터와 Ingress 어노테이션을 직접 수정하므로, Argo CD 가 이를 Git 과의 차이로 보고
+#   selfHeal 로 되돌릴 수 있다. 카나리가 100% stable 로 되돌려지는 이 문제를 실제로 관찰하고 고친다
+#   (engineering-log.md 의 "예상" 항목).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: reservation
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jaehwan01101/reservation-app.git
+    targetRevision: main
+    path: deploy
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: reservation
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
