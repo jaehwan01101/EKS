@@ -54,6 +54,13 @@
 - **상태**: 해결됨 (수정 push 후 Application 이 정상으로 바뀐 것을 확인). 단, ClusterSecretStore 가 Ready 인지(= SSM 인증까지 통하는지)와 실제 Secret 동기화는 앱 배포 단계에서 별도로 검증한다.
 - **배운 것**: 증상(Degraded)이 아니라 메시지(`operationState`)를 읽는다. 재시작 횟수 같은 2차 증상은 뿌리를 가리지 않게 주의.
 
+### 6. 정리 후 복구했더니 ClusterSecretStore 가 `InvalidProviderConfig` (Pod Identity 연결 순서)
+- **증상**: 클러스터 껍데기만 남은 상태에서 노드를 다시 만들고 `50-platform`(연결 레코드)을 다시 적용한 뒤, ESO 의 ClusterSecretStore 가 "unable to validate store" 로 60분간 17번 실패.
+- **원인(추정, 직접 확인하지 못함)**: Pod Identity 의 신원 정보(환경변수와 토큰 파일)는 **파드가 만들어지는 순간에만** 웹훅이 주입한다. 어제 `50-platform` 이 먼저 지워져 연결 레코드가 없는 상태에서 파드가 재생성됐고, 오늘 연결이 다시 만들어졌지만 파드는 옛 상태였을 가능성이 크다.
+- **확인된 것**: 클러스터를 완전히 지우고 올바른 순서(연결 레코드 → 파드)로 다시 만들자 처음부터 정상(`external-secrets-config` Healthy, ALB 타깃 healthy, 앱 HTTP 200). ESO 본체 파드에 `AWS_CONTAINER_CREDENTIALS_FULL_URI`, `AWS_CONTAINER_AUTHORIZATION_TOKEN_FILE` 환경변수가 주입된 것을 확인.
+- **확인하지 못한 것**: 어제 실패한 파드에 그 변수가 실제로 없었는지(파드가 이미 사라져서 검증 불가). 따라서 "주입 누락이 원인"은 추정으로만 쓴다.
+- **배운 것**: 연결 레코드는 파드보다 먼저 있어야 하고, 순서가 어긋났다면 파드 재시작으로 풀어야 한다(이번에는 적용하지 않음). 원인 모를 때는 메시지(`unable to validate store`)가 아니라 파드 환경변수와 컨트롤러 로그를 확인한다.
+
 ---
 
 ## 설계 결정과 근거 (검증됨)
